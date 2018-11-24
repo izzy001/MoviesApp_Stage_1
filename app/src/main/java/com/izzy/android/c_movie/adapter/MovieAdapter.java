@@ -1,188 +1,119 @@
 package com.izzy.android.c_movie.adapter;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.izzy.android.c_movie.MovieDb.MovieContract;
 import com.izzy.android.c_movie.R;
-import com.izzy.android.c_movie.data.model.Movie;
-import com.squareup.picasso.Callback;
+import com.izzy.android.c_movie.model.Movie.Movie;
+import com.izzy.android.c_movie.network.ApiConstants;
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
+    private static final String TAG = MovieAdapter.class.getSimpleName();
+    private List<Movie> mMovies;
+    final private ListClickListener mListClickListener;
+    private Context context;
+    private MovieViewHolder holder;
 
-    private final static String LOG_TAG = MovieAdapter.class.getSimpleName();
-    public static final float POSTER_ASPECT_RATIO = 1.5f;
-
-    private final ArrayList<Movie> mMovies;
-
-    private OnItemClickListener mOnItemClickListener;
-
-    public interface OnItemClickListener {
-        void send_details(Movie movie, int position);
+    public MovieAdapter(Context context, ListClickListener onListClickListener) {
+        this.context = context;
+        this.mListClickListener = onListClickListener;
     }
-
-
-    public MovieAdapter(ArrayList<Movie> movies, OnItemClickListener mItemClickListener) {
-        mMovies = movies;
-        this.mOnItemClickListener = mItemClickListener;
-    }
-
 
     @NonNull
     @Override
-    public MovieViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Context parentContext = parent.getContext();
-        int layoutForMovieItem = R.layout.movie_item;
-        LayoutInflater inflater = LayoutInflater.from(parentContext);
-        boolean shouldAttachToParentImmediately = false;
-        View view = inflater.inflate(R.layout.movie_item, parent, shouldAttachToParentImmediately);
-        final Context context = view.getContext();
-
-        int gridColsNumber = context.getResources()
-                .getInteger(R.integer.number_of_grid_columns);
-
-        view.getLayoutParams().height = (int) (parent.getWidth() / gridColsNumber *
-                POSTER_ASPECT_RATIO);
-
-
-        MovieViewHolder viewHolder = new MovieViewHolder(view);
-        return viewHolder;
+    public MovieViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        View viewItem = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.movie_item, viewGroup, false);
+        return new MovieViewHolder(viewItem);
     }
-
-
 
     @Override
-    public void onBindViewHolder(@NonNull final MovieViewHolder holder, int position) {
-        final Movie movie = mMovies.get(position);
-        final Context context = holder.mView.getContext();
-
-        holder.mMovie = movie;
-        holder.mMovietitle.setText(movie.getOriginalTitle());
-
-        String posterUrl = movie.getPosterPath();
-
-        // Warning: onError() will not be called, if url is null.
-        // Empty url leads to app crash.
-        if (posterUrl == null) {
-            holder.mMovietitle.setVisibility(View.VISIBLE);
-        }
-
-        Picasso.get()
-                .load(movie.getPosterPath())
-                .config(Bitmap.Config.RGB_565)
-                .placeholder(R.drawable.image_placeholder)
-                .into(holder.mMovieThumbnail,
-                        new Callback() {
-                            @Override
-                            public void onSuccess() {
-                                if (holder.mMovie.getId() != movie.getId()) {
-                                    holder.cleanUp();
-                                } else {
-                                    holder.mMovieThumbnail.setVisibility(View.VISIBLE);
-                                }
-                            }
-                            @Override
-                            public void onError(Exception e) {
-                                holder.mMovietitle.setVisibility(View.VISIBLE);
-                            }
-                        }
-                );
-
-        holder.mView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mOnItemClickListener.send_details(movie,holder.getAdapterPosition());
-            }
-        });
+    public void onBindViewHolder(@NonNull MovieViewHolder movieViewHolder, int position) {
+        this.holder = movieViewHolder;
+        bindViews(movieViewHolder);
     }
 
+    /**
+     * Helper method for binding views to data
+     * to be called in onBindViewHolder method
+     *
+     * @param holder movie viewHolder object
+     */
+    private void bindViews(MovieViewHolder holder) {
+        Movie movie = mMovies.get(holder.getAdapterPosition());
+        loadImagePoster(holder, movie.getMovieImagePath());
+        holder.movieTitle.setText(movie.getOriginalTitle());
+
+    }
+
+    /**
+     * Helper method to load poster image with picasso
+     * to be called in bindViews method
+     *
+     * @param holder   the movieViewHolder argument
+     * @param imageUrl poster path from movieDB api
+     */
+    private void loadImagePoster(final MovieViewHolder holder, String imageUrl) {
+        String posterUrl = ApiConstants.MOVIES_POSTER_BASE_URL;
+        Picasso.get()
+                .load(posterUrl + imageUrl)
+                .error(R.mipmap.ic_launcher)
+                .into(holder.movieImageView);
+    }
 
     @Override
     public int getItemCount() {
+        if (mMovies == null) {
+            return 0;
+        }
         return mMovies.size();
     }
 
-    @Override
-    public void onViewRecycled(MovieViewHolder holder) {
-        super.onViewRecycled(holder);
-        holder.cleanUp();
+    public void setMovieItem(List<Movie> movie) {
+        this.mMovies = movie;
+        notifyDataSetChanged();
+
     }
 
-    //Inner Class
-    public class MovieViewHolder extends RecyclerView.ViewHolder {
-        public final View mView;
+    public interface ListClickListener {
+        void onListClick(Movie movie);
+    }
 
-        public Movie mMovie;
 
-        @BindView(R.id.movie_thumbnail)
-        ImageView mMovieThumbnail;
+    public class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+        @BindView(R.id.movie_imageView)
+        ImageView movieImageView;
         @BindView(R.id.movie_title)
-        TextView mMovietitle;
+        TextView movieTitle;
 
-        public MovieViewHolder(View view) {
-            super(view);
-            ButterKnife.bind(this, view);
-            mView = view;
-
-        }
-        //Other methods
-        public void cleanUp() {
-            final Context context = mView.getContext();
-            Picasso.get().cancelRequest(mMovieThumbnail);
-            mMovieThumbnail.setImageBitmap(null);
-            mMovieThumbnail.setVisibility(View.INVISIBLE);
-            mMovietitle.setVisibility(View.GONE);
+        MovieViewHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+            itemView.setOnClickListener(this);
         }
 
-    }
-    public void add(List<Movie> movies) {
-        mMovies.clear();
-        mMovies.addAll(movies);
-        notifyDataSetChanged();
-    }
-
-    public void add(Cursor cursor) {
-
-        mMovies.clear();
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                long id = cursor.getLong(MovieContract.MovieEntry.COL_MOVIE_ID);
-                String v_average = cursor.getString(MovieContract.MovieEntry.COL_MOVIE_VOTE_AVERAGE);
-                String title = cursor.getString(MovieContract.MovieEntry.COL_MOVIE_TITLE);
-                String backdropPath = cursor.getString(MovieContract.MovieEntry.COL_MOVIE_BACKDROP_PATH);
-                String overview = cursor.getString(MovieContract.MovieEntry.COL_MOVIE_OVERVIEW);
-                String releaseDate = cursor.getString(MovieContract.MovieEntry.COL_MOVIE_RELEASE_DATE);
-                String posterPath = cursor.getString(MovieContract.MovieEntry.COL_MOVIE_POSTER_PATH);
-                Movie movie = new Movie(id,v_average,title,backdropPath,overview,releaseDate,posterPath);
-                mMovies.add(movie);
-            } while (cursor.moveToNext());
-
+        /**
+         * Called when a view has been clicked.
+         *
+         * @param v The view that was clicked.
+         */
+        @Override
+        public void onClick(View v) {
+            int position = getAdapterPosition();
+            mListClickListener.onListClick(mMovies.get(position));
         }
-        notifyDataSetChanged();
     }
-
-    public ArrayList<Movie> getMovies() {
-        return mMovies;
-    }
-
 
 }

@@ -1,22 +1,19 @@
 <resources>
-    <string name="app_name">C-Movie</string>
-    <string name="description">Movie</string>
-    <string name="title_network_alert">Network Error</string>
-    <string name="message_network_alert">Make sure you are connected to Internet</string>
-    <string name="release_date_error">Release Date Missing</string>
-
-    <!--DashBoard Menu Strings-->
-    <string name="top_rated">Top rated</string>
-    <string name="favorites">Favorites</string>
+    <string name="app_name">C_Movie</string>
+    <string name="content_description">movie posters</string>
+    <string name="backdrop_desc">backdrop image</string>
+    <string name="movie_poster">movie poster</string>
+    <string name="movie_data_unavailable">movie data unavailable</string>
+    <string name="top_rated">Top Rated</string>
     <string name="popular">Popular</string>
-    <string name="sort_by">Sort by</string>
+    <string name="sort_by">sort by</string>
+    <string name="maxwell">Maxwell</string>
+    <string name="some_content">some content</string>
+    <string name="video_thumbnail">video thumbnail</string>
+    <string name="synopsis">Synopsis</string>
+    <string name="favorites">Favorites</string>
+    <string name="review">Reviews</string>
+    <string name="trailer">Trailers</string>
+    <string name="refresh">refresh</string>
 
-    <!--Movie Details Section-->
-    <string name="share_trailer">Share trailer</string>
-    <string name="add_to_favorites">Mark as favorite</string>
-    <string name="remove_from_favorites">Remove from favorites</string>
-    <string name="watch_trailer">Watch trailer</string>
-
-    <!--Rating-->
-    <string name="movie_user_rating">TMDb: %1$s/10</string>
 </resources>
